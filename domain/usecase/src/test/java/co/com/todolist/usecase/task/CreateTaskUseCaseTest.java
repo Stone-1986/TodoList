@@ -1,5 +1,6 @@
 package co.com.todolist.usecase.task;
 
+import co.com.todolist.exceptions.bussiness.CustomBusinessException;
 import co.com.todolist.model.task.Task;
 import co.com.todolist.model.task.gateways.TaskRepository;
 import org.junit.jupiter.api.Test;
@@ -9,7 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -61,8 +62,11 @@ class CreateTaskUseCaseTest {
 
         // Assert
         StepVerifier.create(result)
-                .expectErrorMatches(throwable -> throwable instanceof IllegalArgumentException &&
-                        throwable.getMessage().equals("El titulo de la tarea no puede estar vacío"))
+                .expectErrorSatisfies(throwable -> {
+                    assertTrue(throwable instanceof CustomBusinessException);
+                    CustomBusinessException exception = (CustomBusinessException) throwable;
+                    assertEquals("SCB004", exception.getCode());
+                })
                 .verify();
     }
 
@@ -79,8 +83,11 @@ class CreateTaskUseCaseTest {
 
         // Assert
         StepVerifier.create(result)
-                .expectErrorMatches(throwable -> throwable instanceof IllegalArgumentException &&
-                        throwable.getMessage().equals("El titulo de la tarea no puede estar vacío"))
+                .expectErrorSatisfies(throwable -> {
+                    assertTrue(throwable instanceof CustomBusinessException);
+                    CustomBusinessException exception = (CustomBusinessException) throwable;
+                    assertEquals("SCB004", exception.getCode());
+                })
                 .verify();
     }
 }

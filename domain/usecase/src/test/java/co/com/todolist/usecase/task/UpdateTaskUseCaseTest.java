@@ -1,5 +1,6 @@
 package co.com.todolist.usecase.task;
 
+import co.com.todolist.exceptions.bussiness.CustomBusinessException;
 import co.com.todolist.model.task.Task;
 import co.com.todolist.model.task.TaskUpdate;
 import co.com.todolist.model.task.gateways.TaskRepository;
@@ -11,6 +12,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
@@ -99,10 +102,14 @@ class UpdateTaskUseCaseTest {
 
         // Assert
         StepVerifier.create(result)
-                .expectErrorMatches(throwable -> throwable instanceof IllegalArgumentException &&
-                        throwable.getMessage().equals("La tarea con el id " + taskId + " no existe"))
+                .expectErrorSatisfies(throwable -> {
+                    assertTrue(throwable instanceof CustomBusinessException, " CustomBusinessException");
+                    CustomBusinessException exception = (CustomBusinessException) throwable;
+                    assertEquals("SCB003", exception.getCode(), "Código de error incorrecto");
+                })
                 .verify();
     }
+
 
     @Test
     void updateTask_shouldUpdatePartialFields_whenSomeFieldsAreProvided() {

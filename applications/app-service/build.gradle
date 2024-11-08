@@ -25,5 +25,6 @@ jar {
 
 bootJar {
     // Sets output jar name
-    archiveFileName = "${project.getParent().getName()}.${archiveExtension.get()}"
+    mainClass = 'co.com.todolist.MainApplication'
+    archiveFileName = "${project.getParent().getName()}.jar"
 }

@@ -1,5 +1,8 @@
 package co.com.todolist.exception_handler;
 
+import co.com.todolist.exceptions.bussiness.CustomBusinessException;
+import co.com.todolist.exceptions.error.ErrorDetails;
+import co.com.todolist.exceptions.tecnical.CustomTechnicalException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.boot.autoconfigure.web.reactive.error.AbstractErrorWebExceptionHandler;
@@ -10,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.*;
 import org.springframework.web.server.ServerWebExchange;
@@ -20,6 +24,7 @@ import java.util.Map;
 @Slf4j
 @Component
 public class GlobalErrorExceptionHandler extends AbstractErrorWebExceptionHandler {
+
     public GlobalErrorExceptionHandler(ErrorAttributes errorAttributes, WebProperties webProperties,
                                        ApplicationContext applicationContext, ServerCodecConfigurer configure) {
         super(errorAttributes, webProperties.getResources(), applicationContext);
@@ -32,15 +37,28 @@ public class GlobalErrorExceptionHandler extends AbstractErrorWebExceptionHandle
         return RouterFunctions.route(RequestPredicates.all(), this::renderErrorResponse);
     }
 
-
     private Mono<ServerResponse> renderErrorResponse(ServerRequest request) {
-        Map<String, Object> errorAttributes = getErrorAttributes(request, ErrorAttributeOptions.defaults());
-        HttpStatus status = HttpStatus.valueOf((Integer) errorAttributes.getOrDefault(
-                "status", HttpStatus.INTERNAL_SERVER_ERROR.value())
-        );
+        Throwable error = getError(request);
+        HttpStatus status = getHttpStatus(error);
+
+        Map<String, Object> errorAttributesMap = getErrorAttributes(request, ErrorAttributeOptions.defaults());
+        ErrorDetails errorDetails = (ErrorDetails) errorAttributesMap.get("errorDetails");
+
         return ServerResponse.status(status)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(errorAttributes));
+                .body(BodyInserters.fromValue(errorDetails));
+    }
+
+    private HttpStatus getHttpStatus(Throwable error) {
+        if (error instanceof CustomBusinessException businessException) {
+            return HttpStatus.valueOf(businessException.getStatusCode());
+        } else if (error instanceof CustomTechnicalException technicalException) {
+            return HttpStatus.valueOf(technicalException.getStatusCode());
+        } else if (error instanceof WebExchangeBindException) {
+            return HttpStatus.BAD_REQUEST;
+        } else {
+            return HttpStatus.INTERNAL_SERVER_ERROR;
+        }
     }
 
     @Override

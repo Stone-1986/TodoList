@@ -1,5 +1,6 @@
 package co.com.todolist.usecase.task;
 
+import co.com.todolist.exceptions.bussiness.CustomBusinessException;
 import co.com.todolist.model.task.Task;
 import co.com.todolist.model.task.gateways.TaskRepository;
 import org.junit.jupiter.api.Test;
@@ -49,7 +50,7 @@ class ToggleTaskStatusUseCaseTest {
 
         // Assert
         StepVerifier.create(result)
-                .expectError(IllegalArgumentException.class)
+                .expectError(CustomBusinessException.class)
                 .verify();
     }
 }

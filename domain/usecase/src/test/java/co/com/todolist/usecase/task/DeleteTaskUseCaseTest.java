@@ -1,5 +1,6 @@
 package co.com.todolist.usecase.task;
 
+import co.com.todolist.exceptions.bussiness.CustomBusinessException;
 import co.com.todolist.model.task.Task;
 import co.com.todolist.model.task.gateways.TaskRepository;
 import org.junit.jupiter.api.Test;
@@ -36,7 +37,7 @@ class DeleteTaskUseCaseTest {
     }
 
     @Test
-    void deleteTask_shouldReturnError_whenTaskDoesNotExist() {
+    void deleteTask_shouldReturnError_whenTaskDoesNotExiste() {
         // Arrange
         when(taskRepository.getTaskById(anyString())).thenReturn(Mono.empty());
 
@@ -45,7 +46,11 @@ class DeleteTaskUseCaseTest {
 
         // Assert
         StepVerifier.create(result)
-                .expectError(IllegalArgumentException.class)
+                .expectErrorSatisfies(throwable -> {
+                    assert throwable instanceof CustomBusinessException;
+                    CustomBusinessException exception = (CustomBusinessException) throwable;
+                    assert exception.getCode().equals("SCB003");
+                })
                 .verify();
     }
 }
